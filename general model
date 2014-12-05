@@ -31,14 +31,25 @@ int main(int argc, const char * argv[]) {
     bool u_f;
     bool u_d;
     bool u_b;
+    bool u_o;
     while (1) {
         
-        cout<<"front sensor"<<endl;
-        cin>>u_f;
-        cout<<"door sensor"<<endl;
-        cin>>u_d;
-        cout<<"back sensor"<<endl;
-        cin>>u_b;
+        cout<<"door open?"<<endl;
+        cin>>u_o;
+        if (u_o == 1) {
+            cout<<"front sensor"<<endl;
+            cin>>u_f;
+            cout<<"door sensor"<<endl;
+            cin>>u_d;
+            cout<<"back sensor"<<endl;
+            cin>>u_b;
+        }
+        else {
+            ++end;
+            sleep(0.1);
+            continue;
+        }
+        
         
         if (end == 50) {
             end = 0;
@@ -70,7 +81,7 @@ int main(int argc, const char * argv[]) {
             bool outFlag = 0;
             bool bFlag = 0;
             
-            for (int i = end; bCount < 20; i--) { // check previous condition
+            for (int i = end; bCount < 20; ++bCount) { // check previous condition
                 if (i < 0) {
                     i = 49;
                 }
@@ -90,6 +101,12 @@ int main(int argc, const char * argv[]) {
                     }
                     break;
                 }
+            }
+            
+            if (bCount >= 20) {
+                cout<<"ERROR: There's a ghost"<<endl;
+                continue;
+
             }
             
             while (nCount < 20) { // track the condition of next 2 seconds
@@ -143,8 +160,9 @@ int main(int argc, const char * argv[]) {
                 else if (tBuf[end] & 0x2) { // person wait at the door
                     nCount++;
                 }
-                
-                break; // person didn't go through
+                else { // person didn't go through
+                    break;
+                }
             }
             
         }
