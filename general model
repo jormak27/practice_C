@@ -1,0 +1,180 @@
+//
+//  main.cpp
+//  Final_P
+//
+//  Created by Longxiang Cui on 11/26/14.
+//  Copyright (c) 2014 Longxiang Cui. All rights reserved.
+//
+
+// General model without physical detection
+// Sensor value input from keyboard
+
+#include <iostream>
+#include <vector>
+#include <string>
+#include <cmath>
+#include <stdlib.h>
+#include <unistd.h>
+
+using namespace std;
+
+int tBuf[50];
+
+
+
+
+int main(int argc, const char * argv[]) {
+    memset(tBuf, 0, 50);
+    int start = 0;
+    int end = 0;
+    int count = 0;
+    bool u_f;
+    bool u_d;
+    bool u_b;
+    bool u_o;
+    while (1) {
+        
+        cout<<"door open?"<<endl;
+        cin>>u_o;
+        if (u_o == 1) {
+            cout<<"front sensor"<<endl;
+            cin>>u_f;
+            cout<<"door sensor"<<endl;
+            cin>>u_d;
+            cout<<"back sensor"<<endl;
+            cin>>u_b;
+        }
+        else {
+            ++end;
+            sleep(0.1);
+            continue;
+        }
+        
+        
+        if (end == 50) {
+            end = 0;
+            
+        }
+        
+        if (end == start) {
+            ++start;
+        }
+        tBuf[end] = 0;
+        if (u_f == 1) { // front sensor
+            tBuf[end] |= 1;
+        }
+        if (u_d == 1) { // detection sensor
+            tBuf[end] |= 2;
+        }
+        if (u_b == 1) { // back sensor
+            tBuf[end] |= 4;
+        }
+        
+        //cout<<endl<<tBuf[end]<<endl<<endl;;
+        
+        if (tBuf[end] & 0x2) { // detected people
+            cout<<"detection mode"<<endl;
+            
+            int bCount = 0;
+            int nCount = 0;
+            bool inFlag = 0;
+            bool outFlag = 0;
+            bool bFlag = 0;
+            
+            for (int i = end; bCount < 20; ++bCount) { // check previous condition
+                if (i < 0) {
+                    i = 49;
+                }
+                
+                if(tBuf[i] & 0x1) {
+                    inFlag = 1;
+                    if (tBuf[i] & 0x4) {
+                        outFlag = 1;
+                    }
+                    break;
+                }
+                
+                else if (tBuf[i] & 0x4) {
+                    outFlag = 1;
+                    if (tBuf[i] & 0x1) {
+                        inFlag = 1;
+                    }
+                    break;
+                }
+            }
+            
+            if (bCount >= 20) {
+                cout<<"ERROR: There's a ghost"<<endl;
+                continue;
+
+            }
+            
+            while (nCount < 20) { // track the condition of next 2 seconds
+                ++end;
+                sleep(0.1);
+                
+                cout<<"detection front sensor"<<endl;
+                cin>>u_f;
+                cout<<"detection door sensor"<<endl;
+                cin>>u_d;
+                cout<<"detection back sensor"<<endl;
+                cin>>u_b;
+                
+                if (end == 50) {
+                    end = 0;
+                    
+                }
+                
+                if (end == start) {
+                    ++start;
+                }
+                tBuf[end] = 0;
+                
+                if (u_b == 1) { // back sensor
+                    tBuf[end] |= 4;
+                }
+                
+                if (u_f == 1) { // front sensor
+                    tBuf[end] |= 1;
+                }
+                
+                
+                if (u_d == 1) { // detection sensor
+                    tBuf[end] |= 2;
+                }
+                
+                if (inFlag == 1 && (tBuf[end] & 0x4)) { // person coming in
+                    count++;
+                    cout<<"one person comes in"<<endl;
+                    cout<<"current count is "<<count<<endl;
+                    break;
+                }
+                
+                else if (outFlag == 1 && (tBuf[end] & 0x1)) { // person going out
+                    count--;
+                    cout<<"one person goes out"<<endl;
+                    cout<<"current count is "<<count<<endl;
+                    break;
+                }
+                
+                else if (tBuf[end] & 0x2) { // person wait at the door
+                    nCount++;
+                }
+                else { // person didn't go through
+                    break;
+                }
+            }
+            
+        }
+        
+        
+        ++end;
+        sleep(0.1);
+        
+        
+    }
+    
+}
+ 
+
+
